@@ -1,0 +1,208 @@
+/*
+ * Unbox design system — macOS "glass" language.
+ *
+ * Layering model (bottom→top):
+ *   1. Native NSVisualEffectView (Electron `vibrancy: 'under-window'`) — the
+ *      desktop blur behind the whole window.
+ *   2. Translucent CSS panels (backdrop-filter blur + saturate) — sidebar,
+ *      cards, toolbars. These READ the vibrancy underneath.
+ *   3. Opaque-ish accents for text/controls so contrast survives busy
+ *      wallpapers (WCAG-checked token pairs below).
+ *
+ * All color tokens use CSS light-dark() so the UI tracks the system
+ * appearance without class toggling.
+ */
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light dark;
+  --font-ui: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono-ui: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, monospace;
+}
+
+@theme inline {
+  --font-sans: var(--font-ui);
+  --font-mono: var(--font-mono-ui);
+
+  --color-background: light-dark(transparent, transparent);
+  --color-foreground: light-dark(oklch(0.24 0.014 265), oklch(0.93 0.008 260));
+
+  --color-card: light-dark(oklch(1 0 0 / 62%), oklch(0.27 0.016 265 / 55%));
+  --color-card-foreground: light-dark(oklch(0.24 0.014 265), oklch(0.93 0.008 260));
+
+  --color-popover: light-dark(oklch(1 0 0 / 88%), oklch(0.26 0.018 265 / 88%));
+  --color-popover-foreground: light-dark(oklch(0.24 0.014 265), oklch(0.93 0.008 260));
+
+  --color-primary: light-dark(oklch(0.55 0.19 258), oklch(0.68 0.16 258));
+  --color-primary-foreground: light-dark(oklch(0.99 0.002 258), oklch(0.14 0.02 258));
+
+  --color-secondary: light-dark(oklch(0.55 0.02 260 / 8%), oklch(0.85 0.01 260 / 12%));
+  --color-secondary-foreground: light-dark(oklch(0.3 0.02 260), oklch(0.9 0.01 260));
+
+  --color-muted: light-dark(oklch(0.55 0.02 260 / 7%), oklch(0.85 0.01 260 / 10%));
+  --color-muted-foreground: light-dark(oklch(0.45 0.02 260 / 78%), oklch(0.75 0.015 260 / 80%));
+
+  --color-accent: light-dark(oklch(0.55 0.02 260 / 8%), oklch(0.85 0.01 260 / 14%));
+  --color-accent-foreground: light-dark(oklch(0.3 0.02 260), oklch(0.92 0.01 260));
+
+  --color-destructive: light-dark(oklch(0.58 0.22 27), oklch(0.65 0.2 27));
+  --color-destructive-foreground: light-dark(oklch(0.99 0.005 27), oklch(0.15 0.02 27));
+
+  --color-success: light-dark(oklch(0.58 0.16 155), oklch(0.72 0.15 155));
+  --color-warning: light-dark(oklch(0.68 0.16 75), oklch(0.78 0.15 80));
+
+  --color-border: light-dark(oklch(0.3 0.02 260 / 12%), oklch(0.9 0.01 260 / 14%));
+  --color-input: light-dark(oklch(0.3 0.02 260 / 16%), oklch(0.9 0.01 260 / 20%));
+  --color-ring: light-dark(oklch(0.55 0.19 258 / 60%), oklch(0.68 0.16 258 / 60%));
+
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+    /* Transparent so the native vibrancy material shows through. */
+    background: transparent;
+  }
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-foreground);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow: hidden;
+    user-select: none;
+    cursor: default;
+  }
+  /* Text content remains selectable where it matters (paths, logs). */
+  [data-selectable],
+  pre,
+  code {
+    user-select: text;
+    cursor: text;
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: light-dark(oklch(0.3 0.02 260 / 25%), oklch(0.9 0.01 260 / 25%));
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: light-dark(oklch(0.3 0.02 260 / 40%), oklch(0.9 0.01 260 / 40%));
+  }
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+@layer components {
+  /* Frosted panel — the core glass material for cards/sidebars. */
+  .glass-panel {
+    background: var(--color-card);
+    backdrop-filter: blur(28px) saturate(1.6);
+    -webkit-backdrop-filter: blur(28px) saturate(1.6);
+    border: 1px solid var(--color-border);
+    box-shadow:
+      0 1px 2px light-dark(oklch(0.2 0.02 260 / 6%), oklch(0 0 0 / 30%)),
+      0 8px 24px light-dark(oklch(0.2 0.02 260 / 8%), oklch(0 0 0 / 25%)),
+      inset 0 1px 0 light-dark(oklch(1 0 0 / 45%), oklch(1 0 0 / 6%));
+  }
+
+  /* Softer variant for large surfaces (main content backdrop). */
+  .glass-subtle {
+    background: light-dark(oklch(1 0 0 / 28%), oklch(0.3 0.02 265 / 22%));
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  }
+
+  /* Drag region for the hiddenInset titlebar. */
+  .titlebar-drag {
+    -webkit-app-region: drag;
+  }
+  .titlebar-nodrag {
+    -webkit-app-region: no-drag;
+  }
+
+  /* Primary button — macOS style: saturated fill + inner highlight edge. */
+  .btn-primary-mac {
+    box-shadow:
+      inset 0 1px 0 light-dark(oklch(1 0 0 / 25%), oklch(1 0 0 / 20%)),
+      0 1px 3px light-dark(oklch(0.4 0.15 258 / 35%), oklch(0 0 0 / 40%));
+  }
+  .btn-primary-mac:active:not(:disabled) {
+    filter: brightness(0.94);
+  }
+
+  .ring-focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+  .ring-focus:focus-visible {
+    box-shadow: 0 0 0 3px var(--color-ring);
+  }
+}
+
+/* Indeterminate linear sweep (stream formats with unknown totals). */
+@keyframes progress-indeterminate {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(430%);
+  }
+}
+.progress-indeterminate {
+  animation: progress-indeterminate 1.6s ease-in-out infinite;
+}
+
+@keyframes progress-ring-spin {
+  0% {
+    stroke-dashoffset: var(--dash, 10);
+    transform: rotate(0deg);
+  }
+  100% {
+    stroke-dashoffset: var(--dash, 10);
+    transform: rotate(360deg);
+  }
+}
+.progress-ring-spin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: progress-ring-spin 1.2s linear infinite;
+}
+
+/* Gentle entrance for screens. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.rise-in {
+  animation: rise-in 0.24s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

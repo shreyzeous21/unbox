@@ -1,0 +1,38 @@
+appId: dev.unbox.extractor
+productName: Unbox
+copyright: MIT © Unbox Contributors
+
+directories:
+  output: dist
+  buildResources: resources/build
+
+files:
+  - out/**
+
+extraResources:
+  - from: resources/bin
+    to: bin
+    filter: ['**/*']
+  - from: resources/licenses
+    to: licenses
+    filter: ['**/*']
+
+mac:
+  category: public.app-category.utilities
+  icon: build/icon.icns
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip
+      arch: [arm64, x64]
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  darkModeSupport: true
+  # Signing/notarization: set CSC_LINK / CSC_KEY_PASSWORD / APPLE_ID /
+  # APPLE_APP_SPECIFIC_PASSWORD / APPLE_TEAM_ID in the environment.
+  # Unsigned local builds use ad-hoc signature (default when no identity).
+  notarize: false
+
+dmg:
+  artifactName: ${productName}-${version}-${arch}.${ext}
+  writeUpdateInfo: false
